@@ -1,0 +1,57 @@
+body{
+	font-family: helvetica, arial;
+	background-color: #EEE;
+}
+#alogout{
+	position: absolute;
+	left: 750px;
+	top: 35px;
+	text-decoration: none;
+}
+#upform{
+	margin-left: auto;
+	margin-right: auto;
+	width: 600px;
+	border: 2px solid #AAA;
+	background-color: white;
+	padding: 5px;
+}
+h1{
+	margin-left: auto;
+	margin-right: auto;
+	width: 600px;
+}
+input{
+	margin: 3px;
+}
+select{
+	margin: 3px;
+}
+#feed{
+	margin-top: 10px;
+	margin-left: auto;
+	margin-right: auto;
+	width: 900px;
+	background-color: #aaDDaa;
+	border: 1px solid #76bd76;
+	
+}
+.progress {
+	position: relative;
+	width: 400px;
+	border: 1px solid #222;
+	padding: 1px;
+	border-radius: 3px;
+}
+.bar {
+	background-color: #5e94ce;
+	width: 0%;
+	height: 20px;
+	border-radius: 3px
+}
+.percent{
+	position: absolute;
+	display:inline-block;
+	top: 2px;
+	left: 48%;
+}

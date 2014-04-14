@@ -1,0 +1,145 @@
+{% load staticfiles %}
+<html>
+<head>
+<link href="{% static 'updata/jro.css' %}" rel="stylesheet" type="text/css"/>
+<script src="{% static 'updata/jquery.min.js' %}"></script>
+<script src="{% static 'updata/jquery.form.js' %}"></script>
+<script>
+var tmp=null
+var offsetg=0
+$( document ).ready(function() {
+	$('#ins').change(getData)
+	//$('#cargar').submit(uploadFile)
+	getData()
+	var options = {
+		//target: '#feed',
+		beforeSend: function(){
+			$('.progress').removeAttr("style")
+			var pVal = '0%'
+			$('.bar').width(pVal)
+			$('.percent').html(pVal)
+			
+		},
+		uploadProgress: function(e, pos, total, percent){
+			//$('#progreso').attr({max: total, value: pos})
+			var pVal = percent + '%'
+			$('.bar').width(pVal)
+			$('.percent').html(pVal)
+		},
+		success: function(res){
+			var pVal = '100%'
+			$('.bar').width(pVal)
+			$('.percent').html(pVal)
+			//$('#feed').html(res.error_message)
+			//$('#feed').html(res.message)
+			//$('#procesar').removeAttr("disabled")
+			$('#procbutton').removeAttr("disabled")
+		},
+		complete: function(xhr){
+			$('#status').html(xhr.responseText)
+		}
+	}
+	$('#cargar').ajaxForm(options)
+	$('#formprocess').submit(process)
+	setInterval(getLog, 1000)
+
+});
+function getLog(){
+	$.get("{% url 'updata:consolelog' %}", {offset: offsetg}, function(res){
+		//console.log(res.data,  res.offset);
+		if (res.offset == null)
+			offsetg = 0
+		else
+			offsetg = res.offset
+		if(res.data){
+			$('#feed').append(res.data)
+			window.scrollTo(0,document.body.scrollHeight)
+		}
+	},'json');
+}
+function uploadFile(){
+	var href = $('#cargar').attr('action')
+	$.post(href,$('#cargar').serialize(), function(res){
+		$('#feed').html(res.error_message)
+		$('#feed').html(res.message)
+	},'json')
+	return false
+}
+function getData(){
+	var sv = $('#ins').val()
+	$('#exp').html("")
+	$.get("{% url 'updata:getExperiments' %}", { instrumentid: sv },
+		function(res){
+			$('#exp').append($('<option>').text('Seleccione experimento').attr('value',-1))
+			$.each(res, function(k, v){
+				$('#exp').append($('<option>').text(v.fields.experimentTitle).attr('value',v.pk))
+			});
+		},'json');
+}
+function progressHandlingFunction(e){
+	if(e.lengthComputable){
+		$('progress').attr({value:e.loaded,max:e.total})
+	}
+}
+function process(){
+	offsetg = 0
+	$('#exph1').val( $('#exp').val() )
+	$('#insh1').val( $('#ins').val() )
+	$('#desch1').val( $('#desc').val() )
+	$('#permissionh1').val( $('input[name=permission]:checked').val() )
+	$('#procbutton').attr("disabled","disabled")
+	var form = $('#formprocess')
+	$.post(form.attr('action'), form.serialize(), function(res){
+		$('#feed').append(res.error_message)
+		$('#feed').append(res.message)
+	},'json');
+	return false
+}
+</script>
+</head>
+<body>
+<a id="alogout" href="{% url 'updata:logout_view' %}">Salir</a>
+<h1> Subir datos </h1>
+{% if error_message %} <p><strong>{{ error_message }}</strong></p> {% endif %}
+<div id="upform">
+<form action="{% url 'updata:upload' %}" method="post" id="cargar" enctype="multipart/form-data">
+{% csrf_token %}
+<!--input type="text" name="desc" id="desc" placeholder="Descripcion"/><br-->
+<label>Descripci&oacute;n:</label><br>
+<textarea name="desc" id="desc" rows="3" cols="80"></textarea><br>
+<input type="file" multiple="multiple" name="archivo"/><br>
+<input type="radio" name="permission" value="0" checked="checked"><label>P&uacute;blico</label>
+<input type="radio" name="permission" value="1"><label>Privado</label><br>
+<label>Instrumento: </label>
+<select name="ins" id="ins">
+<option value="-1">Seleccione instrumento</option>
+{% for ins in instrument_list %}
+<option value="{{ ins.id }}">{{ ins.desc }}</option>
+{% endfor %}
+</select><br>
+<label>Experimento:</label>
+<select name="exp" id="exp"></select><br>
+<input type="submit" value="Cargar"/>
+<!--input type="button" value="Cargar"/-->
+</form>
+<!--progress id="progreso" max="0" value="0"></progress-->
+<div class="progress" style="display:none">
+	<div class="bar" ></div>
+	<div class="percent"></div>
+</div>
+<div id="status"></div>
+<form action="{% url 'updata:process' %}" id="formprocess" method="post"> 
+{% csrf_token %}
+<input type="hidden" name="exp" id="exph1">
+<input type="hidden" name="ins" id="insh1">
+<input type="hidden" name="desc" id="desch1">
+<input type="hidden" name="permission" id="permissionh1">
+<input type="submit" value="Publicar" id="procbutton"  disabled="disabled">
+<!--button id="procesar" disabled>Procesar</button-->
+</form>
+
+{% if message %} <p><strong>{{ message }}</strong></p> {% endif %}
+</div>
+<div id="feed" style="font-family: courier"></div>
+</body>
+</html>
